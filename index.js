@@ -1,52 +1,65 @@
 module.exports = {
-    extend: '@apostrophecms/piece-type',
-    options: {
-      label: 'apostrophe-i18n-static',
+  extend: '@apostrophecms/piece-type',
+  options: {
+    label: 'i18nStatic:label',
+    pluralLabel: 'i18nStatic:pluralLabel',
+    i18n: {
+      ns: 'i18nStatic',
+      browser: true,
     },
-    fields: {
-      add: {
-        locale: {
-          label: 'Locale',
-          type: 'select',
-          choices: 'getLocales',
-          required: true,
-        },
-        key: {
-          label: 'Key',
-          type: 'string',
-          required: true,
-          disabled: false,
-        },
-        namespace: {
-          label: 'Namespace',
-          type: 'string',
-        },
-        valueSingular: {
-          label: 'Singular Value',
-          type: 'string',
-          required: true,
-        },
-        valuePlural: {
-          label: 'Plural Value',
-          type: 'string',
-        },
-        valueZero: {
-          label: 'Zero Value',
-          type: 'string',
-        },
-        trash: {
-          type: 'boolean',
-          label: 'Trash',
-          contextual: true,
-          def: false,
-        },
+    seoFields: false,
+    openGraph: false,
+  },
+  fields: {
+    add: {
+      title: {
+        label: 'i18nStatic:key',
+        type: 'string',
+        required: true,
+        disabled: false,
+      },
+      namespace: {
+        label: 'i18nStatic:namespace',
+        type: 'select',
+        choices: 'getNamespaces',
+      },
+      valueSingular: {
+        label: 'i18nStatic:valueSingular',
+        type: 'string',
+        required: true,
+      },
+      valuePlural: {
+        label: 'i18nStatic:valuePlural',
+        type: 'string',
+      },
+      valueZero: {
+        label: 'i18nStatic:valueZero',
+        type: 'string',
       },
     },
-    methods(self) {
-      return {
-        getLocales(req) {
-          return Object.entries(self.apos.i18n?.locales).map(([key, val]) => ({ label: val.label, value: key })) || []
-        }
-      }
+    group: {
+      basics: {
+        fields: ['key', 'namespace', 'valueSingular', 'valuePlural', 'valueZero'],
+      },
+    },
+  },
+  filters: {
+    add: {
+      namespace: {
+        label: 'i18nStatic:namespace',
+        def: null,
+      },
+    },
+  },
+  methods(self) {
+    return {
+      getNamespaces(req) {
+        return (
+          Object.keys(self.apos.i18n.namespaces).map(ns => ({ label: ns, value: ns })) || [
+            { label: 'default', value: 'default' },
+          ]
+        )
+      },
     }
-};
+  },
+}

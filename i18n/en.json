@@ -1,0 +1,10 @@
+{
+  "label": "Phrase",
+  "pluralLabel": "Phrases",
+  "locale": "Locale",
+  "key": "Key",
+  "namespace": "Namespace",
+  "valueSingular": "Singular Value",
+  "valuePlural": "Plural Value",
+  "valueZero": "Zero Value"
+}

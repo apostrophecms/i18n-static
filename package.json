@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/apostrophecms/i18n-static/issues"
   },
-  "homepage": "https://github.com/apostrophecms/i18n-static#readme"
+  "homepage": "https://github.com/apostrophecms/i18n-static#readme",
+  "dependencies": {
+    "fs-extra": "^10.1.0"
+  }
 }

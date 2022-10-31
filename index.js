@@ -1,4 +1,4 @@
-const fs = require('fs/promises')
+const fs = require('fs-extra')
 
 module.exports = {
   extend: '@apostrophecms/piece-type',
@@ -55,6 +55,13 @@ module.exports = {
       },
     },
   },
+  columns: {
+    add: {
+      namespace: {
+        label: 'i18nStatic:namespace',
+      },
+    },
+  },
   methods(self) {
     return {
       getNamespaces() {
@@ -69,11 +76,9 @@ module.exports = {
         return pieces.reduce(
           (acc, cur) => ({
             ...acc,
-            [cur.key]: {
-              singular: cur.valueSingular,
-              plural: cur.valuePlural,
-              zero: cur.valueZero,
-            },
+            [`${cur.title}`]: cur.valueSingular,
+            [`${cur.title}_plural`]: cur.valuePlural || undefined,
+            [`${cur.title}_zero`]: cur.valueZero || undefined,
           }),
           {},
         )
@@ -81,26 +86,25 @@ module.exports = {
 
       async writeFile(locale) {
         try {
-          const localesDir = self.apos.i18n.options.directory
+          const localesDir = self.apos.i18n.options.directory || 'modules/@apostrophecms/i18n/i18n'
           const file = localesDir + '/' + locale + '.json'
           await fs.ensureFile(file)
 
-          const req = self.apos.tasks.getAnonReq()
+          const req = self.apos.task.getAnonReq()
           const pieces = await self
-            .find(
-              req,
-              { published: true, aposLocale: locale },
-              {
-                title: 1,
-                namespace: 1, // => create one file per namespace?
-                valueSingular: 1,
-                valuePlural: 1,
-                valueZero: 1,
-              },
-            )
+            .find(req)
+            .locale(`${locale}:published`)
+            .project({
+              type: 1,
+              title: 1,
+              namespace: 1,
+              valueSingular: 1,
+              valuePlural: 1,
+              valueZero: 1,
+            })
             .toArray()
           const translations = self.formatPieces(pieces)
-          fs.writeJson(file, translations, { spaces: 2 })
+          await fs.writeJson(file, translations, { spaces: 2 })
         } catch (error) {
           console.error(error.message)
         }
@@ -109,7 +113,7 @@ module.exports = {
   },
   tasks(self) {
     return {
-      generateOne: {
+      'generate-one': {
         usage: 'Write JSON file',
         async task(argv) {
           if (argv.locale) {
@@ -117,7 +121,7 @@ module.exports = {
           }
         },
       },
-      generateAll: {
+      'generate-all': {
         usage: 'Write JSON files',
         async task(argv) {
           for (const locale of Object.keys(self.apos.i18n.locales)) {

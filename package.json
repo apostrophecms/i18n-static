@@ -4,7 +4,7 @@
   "description": "Translation editable A3 pieces with i18next",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "eslint . && mocha"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,16 @@
   },
   "homepage": "https://github.com/apostrophecms/i18n-static#readme",
   "dependencies": {
+    "@apostrophecms/piece-type-exporter": "^1.0.0-beta.1",
+    "@apostrophecms/piece-type-importer": "^1.0.0",
     "fs-extra": "^10.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-apostrophe": "^3.4.1",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.1",
+    "mocha": "^10.1.0"
   }
 }

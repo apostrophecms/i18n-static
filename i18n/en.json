@@ -1,10 +1,14 @@
 {
-  "label": "Phrase",
-  "pluralLabel": "Phrases",
+  "label": "I18n Static Phrase",
+  "pluralLabel": "I18n Static Phrases",
   "locale": "Locale",
   "key": "Key",
   "namespace": "Namespace",
-  "valueSingular": "Singular Value",
-  "valuePlural": "Plural Value",
-  "valueZero": "Zero Value"
+  "valueSingular": "Singular",
+  "valuePlural": "Plural",
+  "valueZero": "Zero",
+  "valuePluralTwo": "Plural Form For \"two\"",
+  "valuePluralFew": "Plural Form For \"few\"",
+  "valuePluralMany": "Plural Form For \"many\"",
+  "localeSpecificsForms":  "Locale Specific Forms"
 }

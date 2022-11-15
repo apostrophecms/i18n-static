@@ -183,8 +183,8 @@ module.exports = {
   handlers(self) {
     return {
       afterSave: {
-        async regenerateFiles() {
-          console.log('=================> PASSING HERE !! <=================');
+        async regenerateFiles(req, piece) {
+          self.tasks['generate-one'].task(req)
         }
       }
     };

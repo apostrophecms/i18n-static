@@ -1,12 +1,11 @@
-const fs = require('fs-extra');
-
 module.exports = {
   extend: '@apostrophecms/piece-type',
+
   options: {
-    label: 'i18nStatic:label',
-    pluralLabel: 'i18nStatic:pluralLabel',
+    label: 'aposI18nStatic:label',
+    pluralLabel: 'aposI18nStatic:pluralLabel',
     i18n: {
-      ns: 'i18nStatic',
+      ns: 'aposI18nStatic',
       browser: true
     },
     seoFields: false,
@@ -17,10 +16,11 @@ module.exports = {
     export: true,
     import: true
   },
+
   fields: {
     add: {
       title: {
-        label: 'i18nStatic:key',
+        label: 'aposI18nStatic:key',
         type: 'string',
         required: true
       },
@@ -32,36 +32,37 @@ module.exports = {
         readOnly: true
       },
       namespace: {
-        label: 'i18nStatic:namespace',
+        label: 'aposI18nStatic:namespace',
         type: 'select',
-        choices: 'getNamespaces'
+        choices: 'getNamespaces',
+        required: true // TODO: check if import CSV fails if no namespace
       },
       valueSingular: {
-        label: 'i18nStatic:valueSingular',
+        label: 'aposI18nStatic:valueSingular',
         type: 'string',
         required: true
       },
       valuePlural: {
-        label: 'i18nStatic:valuePlural',
+        label: 'aposI18nStatic:valuePlural',
         type: 'string'
       },
       valueZero: {
-        label: 'i18nStatic:valueZero',
+        label: 'aposI18nStatic:valueZero',
         type: 'string',
         help: 'If applicable in this locale'
       },
       valuePluralTwo: {
-        label: 'i18nStatic:valuePluralTwo',
+        label: 'aposI18nStatic:valuePluralTwo',
         type: 'string',
         help: 'If applicable in this locale'
       },
       valuePluralFew: {
-        label: 'i18nStatic:valuePluralFew',
+        label: 'aposI18nStatic:valuePluralFew',
         type: 'string',
         help: 'If applicable in this locale'
       },
       valuePluralMany: {
-        label: 'i18nStatic:valuePluralMany',
+        label: 'aposI18nStatic:valuePluralMany',
         type: 'string',
         help: 'If applicable in this locale'
       }
@@ -71,26 +72,29 @@ module.exports = {
         fields: [ 'key', 'namespace', 'valueSingular', 'valuePlural' ]
       },
       specifics: {
-        label: 'i18nStatic:localeSpecificsForms',
+        label: 'aposI18nStatic:localeSpecificsForms',
         fields: [ 'valueZero', 'valuePluralTwo', 'valuePluralFew', 'valuePluralMany' ]
       }
     }
   },
+
   filters: {
     add: {
       namespace: {
-        label: 'i18nStatic:namespace',
+        label: 'aposI18nStatic:namespace',
         def: null
       }
     }
   },
+
   columns: {
     add: {
       namespace: {
-        label: 'i18nStatic:namespace'
+        label: 'aposI18nStatic:namespace'
       }
     }
   },
+
   queries(self, query) {
     return {
       builders: {
@@ -120,6 +124,7 @@ module.exports = {
       }
     };
   },
+
   methods(self) {
     return {
       getNamespaces() {
@@ -149,64 +154,73 @@ module.exports = {
           }),
           {}
         );
-      },
-
-      async writeFile(locale) {
-        try {
-          const localesDir = self.apos.i18n.options.directory || 'modules/@apostrophecms/i18n/i18n';
-          const file = localesDir + '/' + locale + '.json';
-          await fs.ensureFile(file);
-
-          const req = self.apos.task.getAnonReq();
-          const pieces = await self
-            .find(req)
-            .locale(`${locale}:published`)
-            .project({
-              type: 1,
-              title: 1,
-              namespace: 1,
-              valueSingular: 1,
-              valuePlural: 1,
-              valueZero: 1
-            })
-            .toArray();
-          const translations = self.formatPieces(pieces);
-          await fs.writeJson(file, translations, { spaces: 2 });
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error(error.message);
-        }
       }
+
     };
   },
 
   handlers(self) {
     return {
       afterSave: {
-        async regenerateFiles(req, piece) {
-          self.tasks['generate-one'].task(req)
+        async generateNewGlobalId(req, piece) {
+          self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, piece.valueSingular);
+          const i18nStaticId = self.apos.util.generateId();
+          await self.apos.global.update(
+            req,
+            {
+              ...req.data.global,
+              i18nStaticId
+            }
+          );
         }
       }
     };
   },
 
-  tasks(self) {
+  middleware(self) {
     return {
-      'generate-one': {
-        usage: 'Write JSON file',
-        async task(argv) {
-          if (argv.locale) {
-            await self.writeFile(argv.locale);
+      async updateI18Next(req, res, next) {
+        const aposLocale = `${req.locale}:${req.mode}`;
+        self.i18nStaticIds = self.i18nStaticIds || {};
+        if (self.i18nStaticIds[aposLocale] !== req.data.global.i18nStaticId) {
+          const pipeline = [
+            {
+              $match: {
+                aposLocale,
+                type: '@apostrophecms/i18n-static'
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                title: 1,
+                namespace: 1,
+                valueZero: 1,
+                valuePlural: 1,
+                valueSingular: 1,
+                valuePluralTwo: 1,
+                valuePluralFew: 1,
+                valuePluralMany: 1
+              }
+            },
+            {
+              $group: {
+                _id: '$namespace',
+                pieces: {
+                  $push: '$$ROOT'
+                }
+              }
+            }
+          ];
+          const namespaces = await self.apos.doc.db.aggregate(pipeline).toArray();
+          for (const namespace of namespaces) {
+            const ns = namespace._id;
+            const resources = self.formatPieces(namespace.pieces);
+            self.apos.i18n.i18next.addResourceBundle(req.locale, ns, resources, true, true);
           }
         }
-      },
-      'generate-all': {
-        usage: 'Write JSON files',
-        async task() {
-          for (const locale of Object.keys(self.apos.i18n.locales)) {
-            await self.writeFile(locale);
-          }
-        }
+        self.i18nStaticIds[aposLocale] = req.data.global.i18nStaticId;
+        return next();
       }
     };
   }

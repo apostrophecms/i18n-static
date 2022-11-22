@@ -182,7 +182,9 @@ module.exports = {
       async updateI18Next(req, res, next) {
         const aposLocale = `${req.locale}:${req.mode}`;
         self.i18nStaticIds = self.i18nStaticIds || {};
+
         if (self.i18nStaticIds[aposLocale] !== req.data.global.i18nStaticId) {
+          // query i18n-static pieces and group them by namespace bc i18next handles resources this way
           const pipeline = [
             {
               $match: {
@@ -212,14 +214,18 @@ module.exports = {
               }
             }
           ];
+
           const namespaces = await self.apos.doc.db.aggregate(pipeline).toArray();
+
           for (const namespace of namespaces) {
             const ns = namespace._id;
             const resources = self.formatPieces(namespace.pieces);
             self.apos.i18n.i18next.addResourceBundle(req.locale, ns, resources, true, true);
           }
         }
+
         self.i18nStaticIds[aposLocale] = req.data.global.i18nStaticId;
+
         return next();
       }
     };

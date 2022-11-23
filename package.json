@@ -4,7 +4,7 @@
   "description": "Translation editable A3 pieces with i18next",
   "main": "index.js",
   "scripts": {
-    "test": "eslint . && mocha"
+    "test": "eslint . && mocha --exit"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
+    "apostrophe": "^3.32.0",
     "eslint": "^7.32.0",
     "eslint-config-apostrophe": "^3.4.1",
     "eslint-config-standard": "^16.0.3",

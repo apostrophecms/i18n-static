@@ -1,8 +1,9 @@
+const handlers = require('../handlers');
 const assert = require('assert').strict;
 const t = require('apostrophe/test-lib/util.js');
 
 describe('I18n-static', function() {
-  this.timeout(5000);
+  this.timeout(10000);
   let apos;
 
   after(function () {
@@ -37,8 +38,8 @@ describe('I18n-static', function() {
         value: 'apostrophe'
       },
       {
-        label: 'i18nStatic',
-        value: 'i18nStatic'
+        label: 'aposI18nStatic',
+        value: 'aposI18nStatic'
       }
     ];
 
@@ -54,8 +55,8 @@ describe('I18n-static', function() {
         value: 'default'
       },
       {
-        label: 'i18nStatic',
-        value: 'i18nStatic'
+        label: 'aposI18nStatic',
+        value: 'aposI18nStatic'
       }
     ];
 
@@ -84,18 +85,107 @@ describe('I18n-static', function() {
       test: 'test singular',
       test_plural: 'test plural',
       test_zero: 'test zero',
-      test_two: undefined,
-      test_few: undefined,
-      test_many: undefined,
       'test 1': 'test singular',
       'test 1_plural': 'test plural',
-      'test 1_zero': undefined,
-      'test 1_two': undefined,
-      'test 1_few': 'test few',
-      'test 1_many': undefined
+      'test 1_few': 'test few'
     };
 
     assert.deepEqual(actual, expected);
   });
 
+  it('should find pieces and group them by namespace', async function () {
+    const expected = [
+      {
+        _id: 'apostrophe',
+        pieces: [ {
+          title: 'label',
+          namespace: 'aposI18nStatic',
+          valueSingular: 'I18n Static Phrase',
+          type: '@apostrophecms/i18n-static',
+          aposLocale: 'en:draft',
+          aposMode: 'draft',
+          metaType: 'doc',
+          slug: 'label'
+        } ]
+      },
+      {
+        _id: 'aposI18nStatic',
+        pieces: [ {
+          title: 'label',
+          namespace: 'aposI18nStatic',
+          valueSingular: 'I18n Static Phrase',
+          type: '@apostrophecms/i18n-static',
+          aposLocale: 'en:draft',
+          aposMode: 'draft',
+          metaType: 'doc',
+          slug: 'label'
+        } ]
+      }
+    ];
+    const actual = await apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace('en:draft');
+    const aposI18nStaticNamespace = actual.find(item => item._id === 'aposI18nStatic');
+
+    assert.equal(actual.length, expected.length);
+    assert.equal(aposI18nStaticNamespace._id, 'aposI18nStatic');
+  });
+
+  it('should add missing pieces', async function () {
+    const self = {
+      options: {
+        excludeNamespaces: [ 'aposI18nStatic' ]
+      },
+      apos,
+      find: apos.modules['@apostrophecms/i18n-static'].find,
+      formatPieces: apos.modules['@apostrophecms/i18n-static'].formatPieces,
+      findPiecesAndGroupByNamespace: apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
+    };
+    const expected = true;
+    const actual = await handlers(self)['apostrophe:modulesRegistered'].addMissingPieces();
+
+    assert.equal(actual, expected);
+  });
+
+  it('should generate a new i18nStaticId when a i18n-static piece is updated', async function () {
+    const self = {
+      apos,
+      schema: [
+        {
+          name: 'title',
+          label: 'aposI18nStatic:key',
+          type: 'string',
+          required: true
+        },
+        {
+          name: 'namespace',
+          label: 'aposI18nStatic:namespace',
+          type: 'select',
+          choices: 'getNamespaces',
+          def: 'default',
+          required: true
+        },
+        {
+          name: 'valueSingular',
+          label: 'aposI18nStatic:valueSingular',
+          type: 'string',
+          required: true,
+          i18nValue: true
+        }
+      ]
+    };
+    const piece = {
+      title: 'label',
+      namespace: 'aposI18nStatic',
+      valueSingular: 'I18n Static Phrase',
+      type: '@apostrophecms/i18n-static',
+      aposLocale: 'en:draft',
+      aposMode: 'draft',
+      metaType: 'doc',
+      slug: 'label'
+    };
+    const req = apos.task.getReq();
+
+    const firstId = await handlers(self).afterUpdate.generateNewGlobalId(req, piece);
+    const secondId = await handlers(self).afterUpdate.generateNewGlobalId(req, piece);
+    assert.notEqual(firstId, secondId);
+  });
 });

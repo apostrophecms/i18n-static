@@ -1,3 +1,5 @@
+const isEqual = require('lodash.isequal');
+
 module.exports = {
   extend: '@apostrophecms/piece-type',
 
@@ -35,36 +37,43 @@ module.exports = {
         label: 'aposI18nStatic:namespace',
         type: 'select',
         choices: 'getNamespaces',
+        def: 'default',
         required: true // TODO: check if import CSV fails if no namespace
       },
       valueSingular: {
         label: 'aposI18nStatic:valueSingular',
         type: 'string',
-        required: true
+        required: true,
+        i18nValue: true
       },
       valuePlural: {
         label: 'aposI18nStatic:valuePlural',
-        type: 'string'
+        type: 'string',
+        i18nValue: true
       },
       valueZero: {
         label: 'aposI18nStatic:valueZero',
         type: 'string',
-        help: 'If applicable in this locale'
+        help: 'If applicable in this locale',
+        i18nValue: true
       },
       valuePluralTwo: {
         label: 'aposI18nStatic:valuePluralTwo',
         type: 'string',
-        help: 'If applicable in this locale'
+        help: 'If applicable in this locale',
+        i18nValue: true
       },
       valuePluralFew: {
         label: 'aposI18nStatic:valuePluralFew',
         type: 'string',
-        help: 'If applicable in this locale'
+        help: 'If applicable in this locale',
+        i18nValue: true
       },
       valuePluralMany: {
         label: 'aposI18nStatic:valuePluralMany',
         type: 'string',
-        help: 'If applicable in this locale'
+        help: 'If applicable in this locale',
+        i18nValue: true
       }
     },
     group: {
@@ -146,26 +155,138 @@ module.exports = {
           (acc, cur) => ({
             ...acc,
             [`${cur.title}`]: cur.valueSingular,
-            [`${cur.title}_plural`]: cur.valuePlural || undefined,
-            [`${cur.title}_zero`]: cur.valueZero || undefined,
-            [`${cur.title}_two`]: cur.valuePluralTwo || undefined,
-            [`${cur.title}_few`]: cur.valuePluralFew || undefined,
-            [`${cur.title}_many`]: cur.valuePluralMany || undefined
+            ...(cur.valuePlural && { [`${cur.title}_plural`]: cur.valuePlural }),
+            ...(cur.valueZero && { [`${cur.title}_zero`]: cur.valueZero }),
+            ...(cur.valuePluralTwo && { [`${cur.title}_two`]: cur.valuePluralTwo }),
+            ...(cur.valuePluralFew && { [`${cur.title}_few`]: cur.valuePluralFew }),
+            ...(cur.valuePluralMany && { [`${cur.title}_many`]: cur.valuePluralMany })
           }),
           {}
         );
-      }
+      },
 
+      async findPiecesAndGroupByNamespace(aposLocale) {
+        const pipeline = [
+          {
+            $match: {
+              aposLocale,
+              type: '@apostrophecms/i18n-static'
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              title: 1,
+              namespace: 1,
+              valueZero: 1,
+              valuePlural: 1,
+              valueSingular: 1,
+              valuePluralTwo: 1,
+              valuePluralFew: 1,
+              valuePluralMany: 1
+            }
+          },
+          {
+            $group: {
+              _id: '$namespace',
+              pieces: {
+                $push: '$$ROOT'
+              }
+            }
+          }
+        ];
+
+        return self.apos.doc.db.aggregate(pipeline).toArray();
+      }
     };
   },
 
   handlers(self) {
     return {
-      afterSave: {
+      'apostrophe:modulesRegistered': {
+        async addMissingPieces() {
+          const i18nextNamespaces = Object.keys(self.apos.i18n.namespaces)
+            .filter(ns => !self.options.excludeNamespaces.includes(ns));
+
+          const plurals = {
+            plural: 'valuePlural',
+            zero: 'valueZero',
+            two: 'valuePluralTwo',
+            few: 'valuePluralFew',
+            many: 'valuePluralMany'
+          };
+
+          for (const locale of self.apos.i18n.i18next.options.languages) {
+            const req = self.apos.task.getReq({
+              locale,
+              mode: 'draft'
+            });
+            const i18nextResources = i18nextNamespaces.reduce((acc, cur) => {
+              const resources = self.apos.i18n.i18next.getResourceBundle(locale, cur);
+              return {
+                ...acc,
+                ...(resources && { [cur]: resources })
+              };
+            },
+            {});
+
+            const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(`${locale}:draft`);
+            const i18nStaticResources = i18nStaticPiecesByNamespace.reduce((acc, cur) => {
+              const ns = cur._id;
+              const resources = self.formatPieces(cur.pieces);
+              acc[ns] = resources;
+              return acc;
+            }, {});
+
+            if (!isEqual(i18nextResources, i18nStaticResources)) {
+              // eslint-disable-next-line no-console
+              console.log(`Add missing pieces in i18n-static module for ${locale}...`);
+
+              for (const [ namespace, resources ] of Object.entries(i18nextResources)) {
+                for (const [ key, value ] of Object.entries(resources || {})) {
+                  const formattedKey = key.split('_');
+                  const valueToCheck = plurals[formattedKey[1]] || 'valueSingular';
+                  const piece = await self
+                    .find(req, {
+                      title: formattedKey[0],
+                      namespace
+                    })
+                    .toObject();
+
+                  if (!piece) {
+                    const draft = await self.insert(req, {
+                      title: formattedKey[0],
+                      namespace,
+                      [valueToCheck]: value
+                    });
+                    await self.publish(req, draft);
+                  } else if (!piece[valueToCheck]) {
+                    const newPiece = {
+                      ...piece,
+                      [valueToCheck]: value
+                    };
+                    await self.update(req, newPiece);
+                    await self.publish(req, newPiece);
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      afterUpdate: {
         async generateNewGlobalId(req, piece) {
-          self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, piece.valueSingular);
+          const i18nFields = self.schema.filter(field => field.i18nValue);
+
+          for (const field of i18nFields) {
+            if (piece[field.name]) {
+              self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, piece[field.name]);
+            }
+          }
+
           const i18nStaticId = self.apos.util.generateId();
-          await self.apos.global.update(
+          req.data?.global && await self.apos.global.update(
             req,
             {
               ...req.data.global,
@@ -184,38 +305,7 @@ module.exports = {
         self.i18nStaticIds = self.i18nStaticIds || {};
 
         if (self.i18nStaticIds[aposLocale] !== req.data.global.i18nStaticId) {
-          // query i18n-static pieces and group them by namespace bc i18next handles resources this way
-          const pipeline = [
-            {
-              $match: {
-                aposLocale,
-                type: '@apostrophecms/i18n-static'
-              }
-            },
-            {
-              $project: {
-                _id: 0,
-                title: 1,
-                namespace: 1,
-                valueZero: 1,
-                valuePlural: 1,
-                valueSingular: 1,
-                valuePluralTwo: 1,
-                valuePluralFew: 1,
-                valuePluralMany: 1
-              }
-            },
-            {
-              $group: {
-                _id: '$namespace',
-                pieces: {
-                  $push: '$$ROOT'
-                }
-              }
-            }
-          ];
-
-          const namespaces = await self.apos.doc.db.aggregate(pipeline).toArray();
+          const namespaces = await self.findPiecesAndGroupByNamespace(aposLocale);
 
           for (const namespace of namespaces) {
             const ns = namespace._id;

@@ -17,7 +17,7 @@ module.exports = {
       type: 'select',
       choices: 'getNamespaces',
       def: 'default',
-      required: true // TODO: check if import CSV fails if no namespace
+      required: true
     },
     valueSingular: {
       label: 'aposI18nStatic:valueSingular',

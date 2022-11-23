@@ -5,7 +5,8 @@ Translation editable A3 pieces with i18next
 
 1. [Installation](#1)<br>
 2. [Configuration](#2)<br>
-3. [Import and export](#3)<br>
+3. [Behavior](#3)<br>
+4. [Import and export](#4)<br>
 
 This module adds editable pieces for translation through i18next to an A3 project.
 
@@ -13,7 +14,7 @@ This module adds editable pieces for translation through i18next to an A3 projec
 
 ---
 
-Pieces are edited in the module `@apostrophecms/i18n-static`. Then, JSON files are generated for the i18n module used in Apostrophe.
+JSON files used in Apostrophe are used by i18next. These resources are automatically converted as pieces through this lodule `@apostrophecms/i18n-static`.
 
 This will add an entry in the admin bar "I18n Static Phrases".
 
@@ -69,19 +70,7 @@ module.exports = {
 };
 ```
 
-The option `directory` can be used to change the JSON output folder. By default, it is `modules/@apostrophecms/i18n/i18n`.
-
-```js
-  modules: {
-    '@apostrophecms/i18n-static': {
-      options: {
-        directory: 'another/path/folder'
-      }
-    },
-  }
-```
-
-I18n-static pieces have a `namespace` field. Namespaces are found in the A3 project. But if one is unnecessary, it can be removed from the i18n-static `namespace` field by configuring the array `excludeNamespaces` in the module's options.
+I18n-static pieces have a `namespace` field. Namespaces are found in the A3 project. But if resources from specific namespaces should not be converted to i18n-static pieces, they can be excluded by configuring the array `excludeNamespaces` in the module's options.
 
 ```js
   modules: {
@@ -93,9 +82,19 @@ I18n-static pieces have a `namespace` field. Namespaces are found in the A3 proj
   }
 ```
 
+As the `autopublish` option is set to `true` by default, new pieces will be created as draft and live. Change this option to `false` if `draft` is necessary before publishing them later (the `publish` batch feature will be helpful in this case).
+
 <a id="3"></a>
 
-## 3 Import and export [&#x2B06;](#contents)
+## 3 Behavior [&#x2B06;](#contents)
+
+Pieces are automatically created based on i18next resources present in the A3 project. They can also be imported as explained in [the following section](#4).
+
+When an i18n-static piece is edited, an ID is generated and stored in the `global` object. If multiple A3 instances are connected to the same database, they have their own ID. When the global one changes, they will detect it and add the missing resource to i18next.
+
+<a id="4"></a>
+
+## 4 Import and export [&#x2B06;](#contents)
 
 The import feature is available in the manager modal: ![](import.jpg)
 
@@ -108,8 +107,6 @@ title,namespace,valueSingular,valuePlural,valueZero
 test 1,default,test singular,test plural,test zero
 test 2,apostrophe,test,,
 ```
-
-When imported, new pieces will be in draft. Use the publish batch feature to publish them.
 
 The export feature is available in the context menu when items are selected for import. ![](export.jpg)
 

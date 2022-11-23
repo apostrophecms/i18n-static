@@ -145,7 +145,7 @@ describe('I18n-static', function() {
     assert.equal(actual, expected);
   });
 
-  it('should generate a new i18nStaticId when a i18n-static piece is updated', async function () {
+  it('should generate a new i18nStaticId when an i18n-static piece is updated', async function () {
     const self = {
       apos,
       schema: [

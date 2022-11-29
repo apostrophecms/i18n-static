@@ -1,22 +1,22 @@
 <a id="contents"></a>
 
 # i18n-static
-Translation editable A3 pieces with i18next
+Edit translations of static text with i18next
 
 1. [Installation](#1)<br>
 2. [Configuration](#2)<br>
 3. [Behavior](#3)<br>
 4. [Import and export](#4)<br>
 
-This module adds editable pieces for translation through i18next to an A3 project.
+This module makes it possible to edit the translations of static text strings found in your templates through the ApostropheCMS admin UI.
 
 > This module is intended to localize static text in templates i.e text wrapped with `__("...")`, **not localize editable content.** If your goal is content localization, you should use the [default localization feature in A3](https://v3.docs.apostrophecms.org/guide/localization/) instead.
 
 ---
 
-JSON files used in Apostrophe are used by i18next. These resources are automatically converted as pieces through this lodule `@apostrophecms/i18n-static`.
+JSON files used in Apostrophe are used by i18next. These resources are automatically converted as pieces through this module.
 
-This will add an entry in the admin bar "I18n Static Phrases".
+This will add an entry in the admin bar "i18n Static Phrases".
 
 Only admin users have access to this module for now.
 
@@ -70,7 +70,7 @@ module.exports = {
 };
 ```
 
-I18n-static pieces have a `namespace` field. Namespaces are found in the A3 project. But if resources from specific namespaces should not be converted to i18n-static pieces, they can be excluded by configuring the array `excludeNamespaces` in the module's options.
+Namespaces group static texts. But if resources related to a specific namespace should not be created, it has to be excluded by configuring the array `excludeNamespaces` in the module's options.
 
 ```js
   modules: {
@@ -90,7 +90,7 @@ As the `autopublish` option is set to `true` by default, new pieces will be crea
 
 Pieces are automatically created based on i18next resources present in the A3 project. They can also be imported as explained in [the following section](#4).
 
-When an i18n-static piece is edited, an ID is generated and stored in the `global` object. If multiple A3 instances are connected to the same database, they have their own ID. When the global one changes, they will detect it and add the missing resource to i18next.
+When an i18n-static piece is edited, an ID is generated and stored in the `global` object. If multiple A3 instances are connected to the same database, they may not see the latest ID until the next request. When the global one changes, they will detect it and add the missing resource to i18next.
 
 <a id="4"></a>
 
@@ -107,6 +107,8 @@ title,namespace,valueSingular,valuePlural,valueZero
 test 1,default,test singular,test plural,test zero
 test 2,apostrophe,test,,
 ```
+
+Pieces can also be updated with the update feature from the plugin, [as explained here](https://github.com/apostrophecms/piece-type-importer#updating-existing-pieces).
 
 The export feature is available in the context menu when items are selected for import. ![](export.jpg)
 

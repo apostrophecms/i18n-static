@@ -1,6 +1,6 @@
 {
-  "label": "I18n Static Phrase",
-  "pluralLabel": "I18n Static Phrases",
+  "label": "i18n Static Phrase",
+  "pluralLabel": "i18n Static Phrases",
   "locale": "Locale",
   "key": "Key",
   "namespace": "Namespace",

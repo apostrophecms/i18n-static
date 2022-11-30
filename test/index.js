@@ -170,7 +170,9 @@ describe('I18n-static', function() {
           required: true,
           i18nValue: true
         }
-      ]
+      ],
+      findPiecesAndGroupByNamespace:
+        apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
     };
     const piece = {
       title: 'label',

@@ -39,7 +39,7 @@ module.exports = self => {
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             title: 1,
             namespace: 1,
             valueZero: 1,

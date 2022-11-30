@@ -32,8 +32,12 @@ module.exports = self => {
             },
             {});
 
-            const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(`${locale}:draft`);
-            const i18nStaticResources = i18nStaticPiecesByNamespace.reduce((acc, cur) => {
+            let cachedI18nStaticResources = await self.apos.cache.get(locale, 'i18n-static');
+            if (!cachedI18nStaticResources) {
+              cachedI18nStaticResources = await self.findPiecesAndGroupByNamespace(`${locale}:draft`);
+              await self.apos.cache.set(req.locale, 'i18n-static', cachedI18nStaticResources);
+            }
+            const i18nStaticResources = cachedI18nStaticResources.reduce((acc, cur) => {
               const ns = cur._id;
               const resources = self.formatPieces(cur.pieces);
               acc[ns] = resources;
@@ -81,13 +85,32 @@ module.exports = self => {
 
     afterUpdate: {
       async generateNewGlobalId(req, piece) {
+        let updatedField, updatedValue;
         const i18nFields = self.schema.filter(field => field.i18nValue);
 
         for (const field of i18nFields) {
           if (piece[field.name]) {
-            self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, piece[field.name]);
+            updatedField = field.name;
+            updatedValue = piece[field.name];
+            self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, updatedValue);
+            break;
           }
         }
+
+        const aposLocale = `${req.locale}:${req.mode}`;
+        const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(aposLocale);
+        for (const namespace of i18nStaticPiecesByNamespace) {
+          if (namespace._id === piece.namespace) {
+            for (const i18nStaticPiece of namespace.pieces) {
+              if (i18nStaticPiece._id === piece._id) {
+                i18nStaticPiece[updatedField] = updatedValue;
+                break;
+              }
+            }
+            break;
+          }
+        }
+        await self.apos.cache.set(req.locale, 'i18n-static', i18nStaticPiecesByNamespace);
 
         const i18nStaticId = self.apos.util.generateId();
         req.data?.global && await self.apos.global.update(

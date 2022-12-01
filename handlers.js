@@ -4,7 +4,7 @@ module.exports = self => {
   return {
     'apostrophe:modulesRegistered': {
       async addMissingPieces() {
-        return await self.apos.lock.withLock('i18n-static-lock', async () => {
+        return self.apos.lock.withLock('i18n-static-lock', async () => {
           let modified = false;
 
           const i18nextNamespaces = Object.keys(self.apos.i18n.namespaces)

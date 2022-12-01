@@ -8,7 +8,7 @@ Edit translations of static text with i18next
 3. [Behavior](#3)<br>
 4. [Import and export](#4)<br>
 
-This module makes it possible to edit the translations of static text strings found in your templates through the ApostropheCMS admin UI.
+This module makes it possible to edit the [translations of static text strings found in templates](https://v3.docs.apostrophecms.org/guide/localization/static.html) through the ApostropheCMS admin UI.
 
 > This module is intended to localize static text in templates i.e text wrapped with `__("...")`, **not localize editable content.** If your goal is content localization, you should use the [default localization feature in A3](https://v3.docs.apostrophecms.org/guide/localization/) instead.
 

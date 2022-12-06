@@ -3,7 +3,7 @@ const assert = require('assert').strict;
 const t = require('apostrophe/test-lib/util.js');
 
 describe('I18n-static', function() {
-  this.timeout(10000);
+  this.timeout(20000);
   let apos;
 
   after(function () {
@@ -185,9 +185,60 @@ describe('I18n-static', function() {
       slug: 'label'
     };
     const req = apos.task.getReq();
+    const firstId = await handlers(self).afterSave.generateNewGlobalId(req, piece);
+    const secondId = await handlers(self).afterSave.generateNewGlobalId(req, piece);
 
-    const firstId = await handlers(self).afterUpdate.generateNewGlobalId(req, piece);
-    const secondId = await handlers(self).afterUpdate.generateNewGlobalId(req, piece);
     assert.notEqual(firstId, secondId);
+  });
+
+  it('should get initial values from JSON files', async function() {
+    const text = await apos.http.get('/');
+    assert(text.match(/test 2: test of the second translation key/));
+  });
+
+  it('should get updated values from i18n-static', async function() {
+    const self = {
+      apos,
+      schema: [
+        {
+          name: 'title',
+          label: 'aposI18nStatic:key',
+          type: 'string',
+          required: true
+        },
+        {
+          name: 'namespace',
+          label: 'aposI18nStatic:namespace',
+          type: 'select',
+          choices: 'getNamespaces',
+          def: 'default',
+          required: true
+        },
+        {
+          name: 'valueSingular',
+          label: 'aposI18nStatic:valueSingular',
+          type: 'string',
+          required: true,
+          i18nValue: true
+        }
+      ],
+      findPiecesAndGroupByNamespace:
+        apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
+    };
+    const piece = {
+      title: 'test 2',
+      namespace: 'apostrophe',
+      valueSingular: 'new value for test 2',
+      type: '@apostrophecms/i18n-static',
+      aposLocale: 'en:draft',
+      aposMode: 'draft',
+      metaType: 'doc',
+      slug: 'test-2'
+    };
+    const req = apos.task.getReq();
+    await handlers(self).afterSave.generateNewGlobalId(req, piece);
+    const text = await apos.http.get('/');
+
+    assert(text.match(/test 2: new value for test 2/));
   });
 });

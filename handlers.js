@@ -21,7 +21,8 @@ module.exports = self => {
           for (const locale of self.apos.i18n.i18next.options.languages) {
             const req = self.apos.task.getReq({
               locale,
-              mode: 'draft'
+              mode: 'draft',
+              aposStartup: true
             });
             const i18nextResources = i18nextNamespaces.reduce((acc, cur) => {
               const resources = self.apos.i18n.i18next.getResourceBundle(locale, cur);
@@ -83,45 +84,47 @@ module.exports = self => {
 
     },
 
-    afterUpdate: {
+    afterSave: {
       async generateNewGlobalId(req, piece) {
-        let updatedField, updatedValue;
-        const i18nFields = self.schema.filter(field => field.i18nValue);
+        if (!req.aposStartup) {
+          let updatedField, updatedValue;
+          const i18nFields = self.schema.filter(field => field.i18nValue);
 
-        for (const field of i18nFields) {
-          if (piece[field.name]) {
-            updatedField = field.name;
-            updatedValue = piece[field.name];
-            self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, updatedValue);
-            break;
-          }
-        }
-
-        const aposLocale = `${req.locale}:${req.mode}`;
-        const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(aposLocale);
-        for (const namespace of i18nStaticPiecesByNamespace) {
-          if (namespace._id === piece.namespace) {
-            for (const i18nStaticPiece of namespace.pieces) {
-              if (i18nStaticPiece._id === piece._id) {
-                i18nStaticPiece[updatedField] = updatedValue;
-                break;
-              }
+          for (const field of i18nFields) {
+            if (piece[field.name]) {
+              updatedField = field.name;
+              updatedValue = piece[field.name];
+              self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, updatedValue);
+              break;
             }
-            break;
           }
+
+          const aposLocale = `${req.locale}:${req.mode}`;
+          const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(aposLocale);
+          for (const namespace of i18nStaticPiecesByNamespace) {
+            if (namespace._id === piece.namespace) {
+              for (const i18nStaticPiece of namespace.pieces) {
+                if (i18nStaticPiece._id === piece._id) {
+                  i18nStaticPiece[updatedField] = updatedValue;
+                  break;
+                }
+              }
+              break;
+            }
+          }
+          await self.apos.cache.set(req.locale, 'i18n-static', i18nStaticPiecesByNamespace);
+
+          const i18nStaticId = self.apos.util.generateId();
+          req.data?.global && await self.apos.global.update(
+            req,
+            {
+              ...req.data.global,
+              i18nStaticId
+            }
+          );
+
+          return i18nStaticId;
         }
-        await self.apos.cache.set(req.locale, 'i18n-static', i18nStaticPiecesByNamespace);
-
-        const i18nStaticId = self.apos.util.generateId();
-        req.data?.global && await self.apos.global.update(
-          req,
-          {
-            ...req.data.global,
-            i18nStaticId
-          }
-        );
-
-        return i18nStaticId;
       }
     }
   };

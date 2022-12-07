@@ -4,7 +4,7 @@ module.exports = self => {
   return {
     'apostrophe:modulesRegistered': {
       async addMissingPieces() {
-        return self.apos.lock.withLock('i18n-static-lock', async () => {
+        return self.apos.lock.withLock('i18n-static-missing-pieces-lock', async () => {
           let modified = false;
 
           const i18nextNamespaces = Object.keys(self.apos.i18n.namespaces)
@@ -47,8 +47,6 @@ module.exports = self => {
 
             if (!isEqual(i18nextResources, i18nStaticResources)) {
               modified = true;
-              // eslint-disable-next-line no-console
-              console.log(`Add missing pieces in i18n-static module for ${locale}...`);
 
               for (const [ namespace, resources ] of Object.entries(i18nextResources)) {
                 for (const [ key, value ] of Object.entries(resources || {})) {
@@ -62,11 +60,15 @@ module.exports = self => {
                   const existingPiece = await self.find(req, props).toObject();
 
                   if (!existingPiece) {
+                    // eslint-disable-next-line no-console
+                    console.log(`Add missing piece ${title} in i18n-static module for locale ${locale}...`);
                     await self.insert(req, {
                       ...props,
                       [valueToCheck]: value
                     });
                   } else if (!existingPiece[valueToCheck]) {
+                    // eslint-disable-next-line no-console
+                    console.log(`Updating missing prop for piece ${title} in i18n-static module for locale ${locale}...`);
                     const newPiece = {
                       ...existingPiece,
                       [valueToCheck]: value
@@ -75,6 +77,8 @@ module.exports = self => {
                   }
                 }
               }
+
+              self.generateNewGlobalIdAndUpdateCache(req);
             }
           }
 
@@ -85,45 +89,21 @@ module.exports = self => {
     },
 
     afterSave: {
-      async generateNewGlobalId(req, piece) {
+      async handleSave(req, piece) {
         if (!req.aposStartup) {
-          let updatedField, updatedValue;
-          const i18nFields = self.schema.filter(field => field.i18nValue);
+          return self.apos.lock.withLock('i18n-static-after-save-lock', async () => {
+            const i18nFields = self.schema.filter(field => field.i18nValue);
 
-          for (const field of i18nFields) {
-            if (piece[field.name]) {
-              updatedField = field.name;
-              updatedValue = piece[field.name];
-              self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, updatedValue);
-              break;
-            }
-          }
-
-          const aposLocale = `${req.locale}:${req.mode}`;
-          const i18nStaticPiecesByNamespace = await self.findPiecesAndGroupByNamespace(aposLocale);
-          for (const namespace of i18nStaticPiecesByNamespace) {
-            if (namespace._id === piece.namespace) {
-              for (const i18nStaticPiece of namespace.pieces) {
-                if (i18nStaticPiece._id === piece._id) {
-                  i18nStaticPiece[updatedField] = updatedValue;
-                  break;
-                }
+            for (const field of i18nFields) {
+              if (piece[field.name]) {
+                const updatedValue = piece[field.name];
+                self.apos.i18n.i18next.addResource(req.locale, piece.namespace, piece.title, updatedValue);
+                break;
               }
-              break;
             }
-          }
-          await self.apos.cache.set(req.locale, 'i18n-static', i18nStaticPiecesByNamespace);
 
-          const i18nStaticId = self.apos.util.generateId();
-          req.data?.global && await self.apos.global.update(
-            req,
-            {
-              ...req.data.global,
-              i18nStaticId
-            }
-          );
-
-          return i18nStaticId;
+            return self.generateNewGlobalIdAndUpdateCache(req);
+          });
         }
       }
     }

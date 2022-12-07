@@ -137,7 +137,8 @@ describe('I18n-static', function() {
       apos,
       find: apos.modules['@apostrophecms/i18n-static'].find,
       formatPieces: apos.modules['@apostrophecms/i18n-static'].formatPieces,
-      findPiecesAndGroupByNamespace: apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
+      findPiecesAndGroupByNamespace: apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace,
+      generateNewGlobalIdAndUpdateCache: apos.modules['@apostrophecms/i18n-static'].generateNewGlobalIdAndUpdateCache
     };
     const expected = true;
     const actual = await handlers(self)['apostrophe:modulesRegistered'].addMissingPieces();
@@ -171,8 +172,8 @@ describe('I18n-static', function() {
           i18nValue: true
         }
       ],
-      findPiecesAndGroupByNamespace:
-        apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
+      findPiecesAndGroupByNamespace: apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace,
+      generateNewGlobalIdAndUpdateCache: apos.modules['@apostrophecms/i18n-static'].generateNewGlobalIdAndUpdateCache
     };
     const piece = {
       title: 'label',
@@ -185,8 +186,8 @@ describe('I18n-static', function() {
       slug: 'label'
     };
     const req = apos.task.getReq();
-    const firstId = await handlers(self).afterSave.generateNewGlobalId(req, piece);
-    const secondId = await handlers(self).afterSave.generateNewGlobalId(req, piece);
+    const firstId = await handlers(self).afterSave.handleSave(req, piece);
+    const secondId = await handlers(self).afterSave.handleSave(req, piece);
 
     assert.notEqual(firstId, secondId);
   });
@@ -222,8 +223,8 @@ describe('I18n-static', function() {
           i18nValue: true
         }
       ],
-      findPiecesAndGroupByNamespace:
-        apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace
+      findPiecesAndGroupByNamespace: apos.modules['@apostrophecms/i18n-static'].findPiecesAndGroupByNamespace,
+      generateNewGlobalIdAndUpdateCache: apos.modules['@apostrophecms/i18n-static'].generateNewGlobalIdAndUpdateCache
     };
     const piece = {
       title: 'test 2',
@@ -236,7 +237,7 @@ describe('I18n-static', function() {
       slug: 'test-2'
     };
     const req = apos.task.getReq();
-    await handlers(self).afterSave.generateNewGlobalId(req, piece);
+    await handlers(self).afterSave.handleSave(req, piece);
     const text = await apos.http.get('/');
 
     assert(text.match(/test 2: new value for test 2/));

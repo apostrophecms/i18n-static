@@ -18,8 +18,6 @@ module.exports = {
     editRole: 'admin',
     publishRole: 'admin',
     excludeNamespaces: [],
-    export: true,
-    import: true,
     autopublish: true,
     quickCreate: false,
     showCreate: false,

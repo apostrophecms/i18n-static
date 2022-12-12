@@ -1,4 +1,4 @@
-const isEqual = require('lodash.isequal');
+const _ = require('lodash');
 
 module.exports = self => {
   return {

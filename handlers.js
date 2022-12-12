@@ -45,7 +45,17 @@ module.exports = self => {
               return acc;
             }, {});
 
-            if (!isEqual(i18nextResources, i18nStaticResources)) {
+            const i18nextResourcesKeys = Object.entries(i18nextResources)
+              .map(([ namespace, resources ]) => Object.keys(resources).map(key => `${namespace}.${key}`))
+              .flat()
+              .sort();
+            const i18nStaticResourcesKeys = Object.entries(i18nStaticResources)
+              .map(([ namespace, resources ]) => Object.keys(resources).map(key => `${namespace}.${key}`))
+              .flat()
+              .sort();
+
+            // We only have to rebuild if keys existing in the JSON files do not exist as pieces
+            if (_.difference(i18nextResourcesKeys, i18nStaticResourcesKeys).length > 0) {
               modified = true;
 
               for (const [ namespace, resources ] of Object.entries(i18nextResources)) {

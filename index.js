@@ -20,7 +20,9 @@ module.exports = {
     excludeNamespaces: [],
     export: true,
     import: true,
-    autopublish: true
+    autopublish: true,
+    // Don't pollute project level slug namespace
+    slugPrefix: 'i18n-static-'
   },
 
   filters: {

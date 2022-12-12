@@ -70,18 +70,14 @@ module.exports = self => {
 
                   if (!existingPiece) {
                     // eslint-disable-next-line no-console
-                    console.log(
-                      `Add missing piece ${title} in i18n-static module for locale ${locale}...`
-                    );
+                    console.log(`Add missing piece ${title} in i18n-static module for locale ${locale}...`);
                     await self.insert(req, {
                       ...props,
                       [valueToCheck]: value
                     });
                   } else if (!existingPiece[valueToCheck]) {
                     // eslint-disable-next-line no-console
-                    console.log(
-                      `Updating missing prop for piece ${title} in i18n-static module for locale ${locale}...`
-                    );
+                    console.log(`Updating missing prop for piece ${title} in i18n-static module for locale ${locale}...`);
                     const newPiece = {
                       ...existingPiece,
                       [valueToCheck]: value

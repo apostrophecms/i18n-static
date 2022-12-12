@@ -22,7 +22,9 @@ module.exports = {
     import: true,
     autopublish: true,
     quickCreate: false,
-    showCreate: false
+    showCreate: false,
+    // Don't pollute project level slug namespace
+    slugPrefix: 'i18n-static-'
   },
 
   filters: {

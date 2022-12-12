@@ -23,36 +23,42 @@ module.exports = {
       label: 'aposI18nStatic:valueSingular',
       type: 'string',
       required: true,
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     },
     valuePlural: {
       label: 'aposI18nStatic:valuePlural',
       type: 'string',
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     },
     valueZero: {
       label: 'aposI18nStatic:valueZero',
       type: 'string',
       help: 'If applicable in this locale',
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     },
     valuePluralTwo: {
       label: 'aposI18nStatic:valuePluralTwo',
       type: 'string',
       help: 'If applicable in this locale',
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     },
     valuePluralFew: {
       label: 'aposI18nStatic:valuePluralFew',
       type: 'string',
       help: 'If applicable in this locale',
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     },
     valuePluralMany: {
       label: 'aposI18nStatic:valuePluralMany',
       type: 'string',
       help: 'If applicable in this locale',
-      i18nValue: true
+      i18nValue: true,
+      weight: 20
     }
   },
   group: {

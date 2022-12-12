@@ -104,6 +104,8 @@ These options must be added to the module's options at project level:
   // in app.js
   modules: {
     ...
+    '@apostrophecms/piece-type-exporter': {},
+    '@apostrophecms/piece-type-importer': {},
     '@apostrophecms/i18n-static': {
       options: {
         export: true,

@@ -54,7 +54,8 @@ module.exports = self => {
               .flat()
               .sort();
 
-            if (!isEqual(i18nextResourcesKeys, i18nStaticResourcesKeys)) {
+            // We only have to rebuild if keys existing in the JSON files do not exist as pieces
+            if (_.difference(i18nextResourcesKeys, i18nStaticResourcesKeys).length > 0) {
               modified = true;
 
               for (const [ namespace, resources ] of Object.entries(i18nextResources)) {

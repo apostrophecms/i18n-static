@@ -45,7 +45,16 @@ module.exports = self => {
               return acc;
             }, {});
 
-            if (!isEqual(i18nextResources, i18nStaticResources)) {
+            const i18nextResourcesKeys = Object.entries(i18nextResources)
+              .map(([ namespace, resources ]) => Object.keys(resources).map(key => `${namespace}.${key}`))
+              .flat()
+              .sort();
+            const i18nStaticResourcesKeys = Object.entries(i18nStaticResources)
+              .map(([ namespace, resources ]) => Object.keys(resources).map(key => `${namespace}.${key}`))
+              .flat()
+              .sort();
+
+            if (!isEqual(i18nextResourcesKeys, i18nStaticResourcesKeys)) {
               modified = true;
 
               for (const [ namespace, resources ] of Object.entries(i18nextResources)) {

@@ -20,7 +20,9 @@ module.exports = {
     excludeNamespaces: [],
     export: true,
     import: true,
-    autopublish: true
+    autopublish: true,
+    quickCreate: false,
+    showCreate: false
   },
 
   filters: {
@@ -53,7 +55,9 @@ module.exports = {
         self.i18nStaticIds = self.i18nStaticIds || {};
 
         if (self.i18nStaticIds[aposLocale] !== req.data.global.i18nStaticId) {
-          const namespaces = (await self.apos.cache.get(req.locale, 'i18n-static')) || (await self.findPiecesAndGroupByNamespace(aposLocale));
+          const namespaces =
+            (await self.apos.cache.get(req.locale, 'i18n-static')) ||
+            (await self.findPiecesAndGroupByNamespace(aposLocale));
 
           for (const namespace of namespaces) {
             const ns = namespace._id;

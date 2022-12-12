@@ -1,5 +1,3 @@
-const isEqual = require('lodash.isequal');
-
 module.exports = self => {
   return {
     'apostrophe:modulesRegistered': {

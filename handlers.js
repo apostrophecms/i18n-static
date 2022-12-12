@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 module.exports = self => {
   return {
     'apostrophe:modulesRegistered': {

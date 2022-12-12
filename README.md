@@ -96,7 +96,24 @@ When an i18n-static piece is edited, an ID is generated and stored in the `globa
 
 ## 4 Import and export [&#x2B06;](#contents)
 
-The import feature is available in the manager modal: ![](import.jpg)
+It is possible to import and export pieces through existing A3 modules: `npm i @apostrophecms/piece-type-exporter @apostrophecms/piece-type-importer`
+
+These options must be added to the module's options at project level:
+
+```js
+  // in app.js
+  modules: {
+    ...
+    '@apostrophecms/i18n-static': {
+      options: {
+        export: true,
+        import: true
+      }
+    }
+  }
+```
+
+The import feature is then available in the manager modal: ![](import.jpg)
 
 As the [piece-type-importer plugin](https://github.com/apostrophecms/piece-type-importer) is used, the CSV file used for import must include column names that match exactly the field names (optional empty column names can be excluded).
 

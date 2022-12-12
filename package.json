@@ -18,8 +18,7 @@
   "homepage": "https://github.com/apostrophecms/i18n-static#readme",
   "dependencies": {
     "@apostrophecms/piece-type-exporter": "^1.0.0-beta.1",
-    "@apostrophecms/piece-type-importer": "^1.0.0",
-    "lodash.difference": "^4.5.0"
+    "@apostrophecms/piece-type-importer": "^1.0.0"
   },
   "devDependencies": {
     "apostrophe": "^3.32.0",

@@ -35,28 +35,28 @@ module.exports = {
     valueZero: {
       label: 'aposI18nStatic:valueZero',
       type: 'string',
-      help: 'If applicable in this locale',
+      help: 'aposI18nStatic:ifApplicableInThisLocale',
       i18nValue: true,
       weight: 20
     },
     valuePluralTwo: {
       label: 'aposI18nStatic:valuePluralTwo',
       type: 'string',
-      help: 'If applicable in this locale',
+      help: 'aposI18nStatic:ifApplicableInThisLocale',
       i18nValue: true,
       weight: 20
     },
     valuePluralFew: {
       label: 'aposI18nStatic:valuePluralFew',
       type: 'string',
-      help: 'If applicable in this locale',
+      help: 'aposI18nStatic:ifApplicableInThisLocale',
       i18nValue: true,
       weight: 20
     },
     valuePluralMany: {
       label: 'aposI18nStatic:valuePluralMany',
       type: 'string',
-      help: 'If applicable in this locale',
+      help: 'aposI18nStatic:ifApplicableInThisLocale',
       i18nValue: true,
       weight: 20
     }

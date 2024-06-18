@@ -2,7 +2,7 @@
 
 ## UNRELEASED
 
-Add missing UI translations.
+Add missing UI translation keys.
 
 ## 1.0.0
 

@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## UNRELEASED
+## 1.1.1 (2024-10-31)
 
 * Adds AI-generated and community reviewed missing translations
 
